@@ -1,0 +1,34 @@
+[*] Notification : Travail terminé(11 ocotbre 2024)
+                                                            Détails
+Boulevard Saint-Joseph Est entre                            Date de début prévue
+De Bullion et Hôtel-de-Ville                                30 septembre 2024
+
+Travaux de toiture                                          Date de fin prévue
+Aménagement prévu pour la circulation piétonne              11 octobre 2024
+en tout temps
+                                                      
+                                                            Responsable des travaux
+Statut : Terminé                                            Toitures V. Perreault
+
+--------------------------------------------------------------------------------
+[*] Rappel : Construction MTL a soumis sa canditature à votre requête
+(15:00, 12 ocotbre 2024)
+
+Faites le suivi de votre requête[1]
+
+Date limite pour accepter la canditature : 20 octobre 2024
+
+--------------------------------------------------------------------------------
+
+[*] Informations du chantier ont été modifiées:
+Travaux de réfection de la chaussée                          Date de début prévue
+Boulevard René-Lévesque                                      1 novembre 2024
+
+Travaux de nuit                                              Date de fin prévue
+Circulation réduite à une voie                               15 novembre 2024
+en tout temps
+
+                                                            Responsable des travaux
+Statut : En cours                                           Construction ABC
+--------------------------------------------------------------------------------
+                                                            [2] Retour 

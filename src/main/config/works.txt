@@ -1,0 +1,49 @@
+Travaux routiers
+Réfection de la chaussée sur l'Avenue du Parc - En cours (Travaux routiers) [Avenue du Parc]
+Réparations de nids-de-poule sur le Boulevard Saint-Laurent - Terminé (Travaux routiers) [Boulevard Saint-Laurent]
+Extension de la voie réservée sur le Boulevard René-Lévesque - Prévu (Travaux routiers) [Boulevard René-Lévesque]
+
+Travaux de gaz ou électricité
+Remplacement des conduites de gaz sur la Rue Notre-Dame - En cours (Travaux de gaz ou électricité) [Rue Notre-Dame]
+Installation de nouveaux transformateurs électriques au Quartier Centre-Ville - Terminé (Travaux de gaz ou électricité)
+Mise à niveau des lignes électriques sur l'Avenue Atwater - Prévu (Travaux de gaz ou électricité) [Avenue Atwater]
+
+Construction ou rénovation
+Construction d’un complexe résidentiel sur la Rue Sainte-Catherine Est - En cours (Construction ou rénovation) [Rue Sainte-Catherine Est]
+Rénovation de l'hôtel de ville - Terminé (Construction ou rénovation)
+Agrandissement du centre communautaire dans le Quartier Côte-des-Neiges - Prévu (Construction ou rénovation)
+
+Entretien paysager
+Plantation d'arbres dans le Parc Mont-Royal - En cours (Entretien paysager) [Parc Mont-Royal]
+Remise en état des jardins publics dans le Vieux-Port - Terminé (Entretien paysager)
+Aménagement de nouvelles zones vertes dans le Quartier Hochelaga - Prévu (Entretien paysager)
+
+Travaux liés aux transports en commun
+Construction de la nouvelle station de métro sur la Ligne Bleue - En cours (Travaux liés aux transports en commun)
+Modernisation des abris de bus sur la Ligne 80 - Terminé (Travaux liés aux transports en commun)
+Prolongement de la ligne de tramway vers le Quartier Griffintown - Prévu (Travaux liés aux transports en commun)
+
+Travaux de signalisation et éclairage
+Installation de feux de circulation sur l’Avenue du Mont-Royal - En cours (Travaux de signalisation et éclairage) [Avenue du Mont-Royal]
+Remplacement des panneaux de signalisation dans le Quartier Saint-Michel - Terminé (Travaux de signalisation et éclairage)
+Amélioration de l’éclairage public sur la Rue Sherbrooke Ouest - Prévu (Travaux de signalisation et éclairage) [Rue Sherbrooke Ouest]
+
+Travaux souterrains
+Réparation du réseau d’égouts dans le Quartier Rosemont - En cours (Travaux souterrains)
+Mise à jour des conduits d’eau souterraine sur le Boulevard Pie-IX - Terminé (Travaux souterrains) [Boulevard Pie-IX]
+Renforcement des tunnels d’infrastructure dans le Quartier Sud-Ouest - Prévu (Travaux souterrains)
+
+Travaux résidentiels
+Rénovation de logements sociaux sur l'Avenue Papineau - En cours (Travaux résidentiels) [Avenue Papineau]
+Isolation des habitations dans le Quartier Verdun - Terminé (Travaux résidentiels)
+Installation de panneaux solaires pour les habitations dans le Quartier Villeray - Prévu (Travaux résidentiels)
+
+Entretien urbain
+Nettoyage des graffitis dans le Quartier Plateau-Mont-Royal - En cours (Entretien urbain)
+Réparation des bancs publics dans le Quartier Ahuntsic - Terminé (Entretien urbain)
+Repeinture des passages pour piétons dans le Quartier Outremont - Prévu (Entretien urbain)
+
+Entretien des réseaux de télécommunication
+Installation de fibre optique sur la Rue Wellington - En cours (Entretien des réseaux de télécommunication) [Rue Wellington]
+Réparation des câbles internet dans le Quartier Lachine - Terminé (Entretien des réseaux de télécommunication)
+Déploiement d’un nouveau réseau Wi-Fi public dans le Quartier Ville-Marie - Prévu (Entretien des réseaux de télécommunication)

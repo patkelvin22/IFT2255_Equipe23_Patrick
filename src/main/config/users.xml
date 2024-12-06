@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<users>
+    <!-- Résident -->
+    <resident>
+        <username>johnDoe</username>
+        <fullName>John Doe</fullName>
+        <birthDate>1990-01-01</birthDate>
+        <email>johnDoe@gmail.com</email>
+        <password>123456</password>
+        <phone>514-123-4567</phone>
+        <address>123 rue du Pôle Nord, H2T 3V5, Montréal, QC</address>
+        <neighborhood>Le Plateau</neighborhood>
+        <workRequest>
+            <title>Réparation de fuites sur la toiture</title>
+            <description>La toiture présente des fuites importantes qui nécessitent une réparation rapide.</description>
+            <workType>Toiture</workType>
+            <startDate>2024-10-15</startDate>
+            <status>En attente de candidature</status>
+        </workRequest>
+    </resident>
+    
+    <resident>
+        <username>aliceWonder</username>
+        <fullName>Alice Wonderland</fullName>
+        <birthDate>1985-05-15</birthDate>
+        <email>aliceWonder@gmail.com</email>
+        <password>password123</password>
+        <phone>514-987-6543</phone>
+        <address>456 rue de la Forêt, H3A 1B2, Montréal, QC</address>
+        <neighborhood>Plateau-Mont-Royal</neighborhood>
+        <workRequest>
+            <title>Pose d'une nouvelle clôture en bois</title>
+            <description>Installation d'une clôture en bois pour délimiter la propriété.</description>
+            <workType>Clôture</workType>
+            <startDate>2024-11-01</startDate>
+            <status>En attente de candidature</status>
+        </workRequest>
+    </resident>
+
+    <resident>
+        <username>bobBuilder</username>
+        <fullName>Bob Builder</fullName>
+        <birthDate>1978-09-23</birthDate>
+        <email>bobBuilder@yahoo.com</email>
+        <password>builder456</password>
+        <phone>514-321-0987</phone>
+        <address>789 rue de la Construction, H4B 2C3, Montréal, QC</address>
+        <neighborhood>Notre-Dame-de-Grâce</neighborhood>
+        <workRequest>
+            <title>Rénovation de plancher en bois franc</title>
+            <description>Pose d'un nouveau plancher en bois franc dans le salon et la salle à manger.</description>
+            <workType>Revêtement extérieur</workType>
+            <startDate>2024-12-01</startDate>
+            <status>En attente de candidature</status>
+        </workRequest>
+    </resident>
+
+    <!-- Intervenant -->
+    <intervenant>
+        <id>87654321</id>
+        <fullName>Charlie Brown</fullName>
+        <email>charlieBrown@gmail.com</email>
+        <password>charlie789</password>
+        <type>Professionnel</type>
+        <workProject>
+            <title>Réparation de fuites sur la toiture</title>
+            <boroughId>123</boroughId>
+            <organisationName>Entreprise de Toiture</organisationName>
+            <currentStatus>En cours</currentStatus>
+            <reasonCategory>Urgence</reasonCategory>
+            <submitterCategory>Professionnel</submitterCategory>
+        </workProject>
+    </intervenant>
+
+    <intervenant>
+        <id>23456789</id>
+        <fullName>David Tennant</fullName>
+        <email>dt@protonmail.com</email>
+        <password>david1010</password>
+        <type>Particulier</type>
+        <workProject>
+            <title>Pose d'une nouvelle clôture en bois</title>
+            <boroughId>456</boroughId>
+            <organisationName>David's Fences</organisationName>
+            <currentStatus>En attente</currentStatus>
+            <reasonCategory>Esthétique</reasonCategory>
+            <submitterCategory>Particulier</submitterCategory>
+        </workProject>
+    </intervenant>
+
+    <intervenant>
+        <id>12345678</id>
+        <fullName>Jane Smith</fullName>
+        <email>janeSmith@outlook.net</email>
+        <password>123456</password>
+        <type>Particulier</type>
+        <workProject>
+            <title>Rénovation de plancher en bois franc</title>
+            <boroughId>789</boroughId>
+            <organisationName>Jane's Flooring</organisationName>
+            <currentStatus>En attente</currentStatus>
+            <reasonCategory>Esthétique</reasonCategory>
+            <submitterCategory>Particulier</submitterCategory>
+        </workProject>
+    </intervenant>
+</users>

@@ -1,0 +1,19 @@
+[1] Modifier votre profil                                   [2] Consulter les requêtes de travaux
+[3] Soumettre un nouveau projet de travail
+
+VOS TRAVAUX EN COURS :                                      Détails
+Rue Sainte-Catherine Ouest entre                            Date de début prévue : 15 septembre 2024
+Bishop et Crescent                                          Date de fin prévue : 25 novembre 2024
+
+Construction d'un nouveau trottoir                          Horaire des entraves
+et installation de mobilier urbain                          Semaine de 8h00 à 17h00
+                                                            Fins de semaine de 9h00 à 16h00
+
+Arrondissement                                              Responsable des travaux
+Centre-Ville                                                Travaux Urbains MTL Inc.
+
+Statut : En cours ==> Mettre à jour les informations [4]
+
+--------------------------------------------------------------------------------
+
+[5] Se déconnecter                                          [0] Quitter

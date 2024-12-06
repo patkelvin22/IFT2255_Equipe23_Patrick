@@ -1,0 +1,5 @@
+{
+    "liveServer.settings.port": 5501,
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.debug.settings.onBuildFailureProceed": true
+}

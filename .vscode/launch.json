@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "MainMenu",
+            "request": "launch",
+            "mainClass": "ui.MainMenu",
+            "projectName": "MaVille"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "prototype.Main"
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "MainMenu",
+            "request": "launch",
+            "mainClass": "Boundary.MainMenu"
+        },
+        {
+            "type": "java",
+            "name": "Debug Prototype Folder",
+            "request": "launch",
+            "mainClass": "prototype.*"
+        }
+    ]
+}

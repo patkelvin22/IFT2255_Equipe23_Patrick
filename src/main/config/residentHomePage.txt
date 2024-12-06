@@ -1,0 +1,51 @@
+[1] Vous avez 2 nouvelles notifications*                    [3] Rechercher des travaux
+                                                            [4] Consulter des travaux
+[2] Consulter et/ou Modifier  votre profil                  [5] Soumettre une requête de travail
+
+LES TRAVAUX DANS VOTRE QUARTIER :                           Détails
+Boulevard Saint-Joseph Est entre                            Date de début prévue
+De Bullion et Hôtel-de-Ville                                30 septembre 2024
+
+Travaux de toiture                                          Date de fin prévue 
+Aménagement prévu pour la circulation piétonne              11 octobre 2024
+en tout temps
+                                                            Horaire des entraves
+Arrondissement                                              Semaine de 7h00 à 16h00
+Plateau Mont-Royal                                                       
+                                                            Responsable des travaux
+Statut : Terminé                                            Toitures V. Perreault
+
+Next Page[6]                                                [7] Consulter les entraves [9] Se déconnecter [0] Quitter 
+[1] Vous avez 2 nouvelles notifications*                    [3] Rechercher des travaux
+                                                            [4] Consulter des travaux
+[2] Consulter et/ou Modifier  votre profil                  [5] Soumettre une requête de travail
+LES TRAVAUX DANS VOTRE QUARTIER :                           Détails
+Rue Sherbrooke Ouest entre                                  Date de début : 5 octobre 2024
+Atwater et Guy                                              Date de fin prévue : 15 novembre 2024
+
+Réfection du trottoir                                       Horaire des entraves
+Aménagement temporaire pour les piétons                     Semaine de 8h00 à 18h00
+et pistes cyclables                                         Fins de semaine de 9h00 à 17h00
+
+Arrondissement                                              Responsable des travaux
+Ville-Marie                                                 Construction MTL
+
+Statut : En cours  
+
+Next Page[6]                                                [7] Consulter les entraves [9] Se déconnecter [0] Quitter 
+[1] Vous avez 2 nouvelles notifications*                    [3] Rechercher des travaux
+                                                            [4] Consulter des travaux
+[2] Consulter et/ou Modifier  votre profil                  [5] Soumettre une requête de travail
+LES TRAVAUX DANS VOTRE QUARTIER :                           Détails
+Avenue du Parc entre                                        Date de début prévue : 1er décembre 2024
+Mont-Royal et Laurier                                       Date de fin prévue : 20 décembre 2024
+
+Installation d'un nouvel éclairage                          Horaire des entraves
+public et réfection des trottoirs                           Semaine de 7h30 à 17h00
+                                                            Fins de semaine de 9h00 à 15h00
+
+Arrondissement                                              Responsable des travaux
+Plateau Mont-Royal                                          Éclairage Urbain Inc.
+
+Statut : Prévu ==> Participer à la planification[8]
+Next Page[6]                                                [7] Consulter les entraves [9] Se déconnecter [0] Quitter 
