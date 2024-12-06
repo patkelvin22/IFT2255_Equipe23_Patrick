@@ -6,6 +6,13 @@
             "name": "MainMenu",
             "request": "launch",
             "mainClass": "ui.MainMenu",
+            "projectName": "IFT2255_Equipe23"
+        },
+        {
+            "type": "java",
+            "name": "MainMenu",
+            "request": "launch",
+            "mainClass": "ui.MainMenu",
             "projectName": "MaVille"
         },
         {
