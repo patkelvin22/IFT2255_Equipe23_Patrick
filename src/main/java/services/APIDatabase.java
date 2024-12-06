@@ -25,6 +25,8 @@ public class APIDatabase {
         fsaToBoroughMap = getFSAtoBoroughMapping();
         residentsMap = loadResidents();
         intervenantsMap = loadIntervenants();
+        loadWorkRequests();
+        loadNotifications();
     }
 
     // Charger tous les résidents dans une map (id -> Resident)
@@ -49,18 +51,6 @@ public class APIDatabase {
                     rs.getInt("id")
                 );
                 map.put(rs.getString("email"), resident);
-
-                // Charger les notifications pour chaque résident
-                List<Notification> residentNotifications = getNotificationsForResident(resident.getId());
-                for (Notification notification : residentNotifications) {
-                    resident.addNotification(notification);
-                }
-
-                // Charger les requêtes de travaux pour chaque résident
-                List<WorkRequest> residentWorkRequests = getWorkRequestsForResident(resident.getId());
-                for (WorkRequest request : residentWorkRequests) {
-                    resident.addWorkRequest(request);
-                }
             }
             System.out.println("Residents loaded successfully.");
         } catch (SQLException e) {
@@ -83,7 +73,7 @@ public class APIDatabase {
                     "Intervenant",
                     rs.getString("id"),
                     rs.getInt("_id"),
-                    rs.getString("type"),
+                    rs.getString("submittercategory"),
                     rs.getString("organisation_name")
                 );
                 map.put(rs.getString("email"), intervenant);
@@ -101,6 +91,27 @@ public class APIDatabase {
         return map;
     }
 
+    // CHarger les requêtes de travaux pour un résident
+    private void loadWorkRequests() {
+        List<Resident> residents = new ArrayList<>(residentsMap.values());
+        for (Resident r : residents) {
+            List<WorkRequest> requests = getWorkRequestsForResident(r.getId());
+            for (WorkRequest request : requests) {
+                r.addWorkRequest(request);
+            }
+        }
+    }
+
+    //Charge les notifications pour un résident
+    private void loadNotifications(){
+        List<Resident> residents = new ArrayList<>(residentsMap.values());
+        for (Resident r : residents){
+            List<Notification> notifications = getNotificationsForResident(r.getId());
+            for (Notification notification : notifications){
+                r.addNotification(notification);
+            }
+        }
+    }
     // Obtenir un résident par ID
     public Resident getResidentById(int id) {
         String sql = "SELECT email FROM Residents WHERE id = ?";

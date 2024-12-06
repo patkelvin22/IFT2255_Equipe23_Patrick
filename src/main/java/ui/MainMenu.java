@@ -89,7 +89,7 @@ public class MainMenu extends JFrame {
     }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            ManageUsers manageUsers = ManageUsers.getInstance("jdbc:mysql://localhost:3306/maville", "root", "");
+            ManageUsers manageUsers = ManageUsers.getInstance("jdbc:mysql://localhost:3306/maville", "root", "root");
             UserServices userServices = new UserServices(manageUsers);
             MainMenu mainMenu = new MainMenu(userServices, manageUsers);
             mainMenu.setVisible(true);
