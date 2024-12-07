@@ -11,6 +11,7 @@ import java.util.List;
  * les candidats potentiels (intervenants) associés à la requête.
  */
 public class WorkRequest {
+    private int id;
     private String title;
     private String description;
     private String workType;
@@ -56,6 +57,22 @@ public class WorkRequest {
         this.status = STATUS_PENDING; // Par défaut, la requête est en attente
     }
 
+    /**
+     * Obtient l'identifiant de la requête.
+     * @return
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * Met à jour l'identifiant de la requête.
+     * @param id
+     */
+    public void setId(int id) {
+        this.id = id;
+    }
+    
     /**
      * Obtient le titre de la requête.
      *

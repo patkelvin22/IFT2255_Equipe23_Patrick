@@ -1,95 +1,153 @@
 package services;
 
-import java.sql.*;
-import java.util.*;
-import java.sql.Date;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import models.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.*;
 
 public class APIDatabase {
 
-    private Connection connection;
+    private final String API_BASE_URL;
+    private final ObjectMapper objectMapper;
+
     private Map<String, Resident> residentsMap;
     private Map<String, Intervenant> intervenantsMap;
     private Map<Integer, String> boroughMap;
     private Map<String, Integer> fsaToBoroughMap;
 
-    public APIDatabase(String dbUrl, String dbUser, String dbPassword) {
-        try {
-            connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-            System.out.println("Database connection established.");
-        } catch (SQLException e) {
-            System.err.println("Database connection failed: " + e.getMessage());
-        }
-        boroughMap = getAllBoroughs();
-        fsaToBoroughMap = getFSAtoBoroughMapping();
-        residentsMap = loadResidents();
-        intervenantsMap = loadIntervenants();
+    public APIDatabase(String apiBaseUrl) {
+        this.API_BASE_URL = apiBaseUrl; // URL de base de votre API REST
+        this.objectMapper = new ObjectMapper();
+        this.residentsMap = new HashMap<>();
+        this.intervenantsMap = new HashMap<>();
+        this.boroughMap = getAllBoroughs();
+        this.fsaToBoroughMap = getFSAtoBoroughMapping();
+        loadResidents();
+        loadIntervenants();
         loadWorkRequests();
         loadNotifications();
     }
 
-    // Charger tous les résidents dans une map (id -> Resident)
-    private Map<String, Resident> loadResidents() {
-        Map<String, Resident> map = new HashMap<>();
-        String sql = "SELECT * FROM Residents";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                String fsa = rs.getString("postal_code").substring(0, 3);
-                int boroughId = fsaToBoroughMap.getOrDefault(fsa, 0);
-                String borough = boroughMap.getOrDefault(boroughId, "Inconnu");
-                Resident resident = new Resident(
-                    rs.getString("full_name"),
-                    rs.getString("email"),
-                    rs.getString("password_hash"),
-                    "Resident",
-                    rs.getString("address"),
-                    rs.getString("postal_code"),
-                    rs.getDate("birth_date").toString(),
-                    borough,
-                    rs.getInt("id")
-                );
-                map.put(rs.getString("email"), resident);
+    // Charger les résidents via l'API REST
+    private void loadResidents() {
+        try {
+            URL url = new URL(API_BASE_URL + "/residents");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération des résidents : HTTP code " + conn.getResponseCode());
             }
-            System.out.println("Residents loaded successfully.");
-        } catch (SQLException e) {
-            System.err.println("Failed to load residents: " + e.getMessage());
+
+            InputStream is = conn.getInputStream();
+            List<Resident> residents = objectMapper.readValue(is, new TypeReference<List<Resident>>() {});
+            for (Resident resident : residents) {
+                List<WorkRequest> workRequests = getWorkRequestsForResident(resident.getId()); // Récupérer les requêtes
+                for (WorkRequest request : workRequests) {
+                    resident.addWorkRequest(request); // Assigner les requêtes
+                }
+                List<Notification> notifications = getNotificationsForResident(resident.getId()); // Assigner les notifications
+                for (Notification notification : notifications){
+                    resident.addNotification(notification);
+                }
+                residentsMap.put(resident.getEmail(), resident);
+            }
+
+            conn.disconnect();
+            System.out.println("Residents loaded successfully from REST API.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des résidents via l'API REST : " + e.getMessage());
         }
-        return map;
     }
 
-    // Charger tous les intervenants dans une map (id -> Intervenant)
-    private Map<String, Intervenant> loadIntervenants() {
-        Map<String, Intervenant> map = new HashMap<>();
-        String sql = "SELECT * FROM Intervenants";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                Intervenant intervenant = new Intervenant(
-                    rs.getString("full_name"),
-                    rs.getString("email"),
-                    rs.getString("password_hash"),
-                    "Intervenant",
-                    rs.getString("id"),
-                    rs.getInt("_id"),
-                    rs.getString("submittercategory"),
-                    rs.getString("organisation_name")
-                );
-                map.put(rs.getString("email"), intervenant);
+    // Charger les intervenants via l'API REST
+    private void loadIntervenants() {
+        try {
+            URL url = new URL(API_BASE_URL + "/intervenants");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
 
-                // Charger les projets de travaux pour chaque intervenant
-                List<WorkProject> intervenantProjects = getWorkProjectsForIntervenant(intervenant.getIdApi());
-                for (WorkProject project : intervenantProjects) {
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération des intervenants : HTTP code " + conn.getResponseCode());
+            }
+
+            InputStream is = conn.getInputStream();
+            List<Intervenant> intervenants = objectMapper.readValue(is, new TypeReference<List<Intervenant>>() {});
+            for (Intervenant intervenant : intervenants) {
+                List<WorkProject> projects = getWorkProjectsForIntervenant(intervenant.getIdApi());
+                for (WorkProject project : projects) {
                     intervenant.addWorkProject(project);
                 }
+                intervenantsMap.put(intervenant.getEmail(), intervenant);
             }
-            System.out.println("Intervenants loaded successfully.");
-        } catch (SQLException e) {
-            System.err.println("Failed to load intervenants: " + e.getMessage());
+
+            conn.disconnect();
+            System.out.println("Intervenants loaded successfully from REST API.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des intervenants via l'API REST : " + e.getMessage());
         }
-        return map;
     }
+
+    // Récupérer un résident spécifique via l'API REST
+    public Resident getResidentById(int id) {
+        try {
+            URL url = new URL(API_BASE_URL + "/residents/" + id);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() == 404) {
+                System.out.println("Résident non trouvé pour l'ID " + id);
+                return null;
+            }
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération du résident : HTTP code " + conn.getResponseCode());
+            }
+
+            InputStream is = conn.getInputStream();
+            Resident resident = objectMapper.readValue(is, Resident.class);
+            conn.disconnect();
+            return resident;
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération du résident via l'API REST : " + e.getMessage());
+            return null;
+        }
+    }
+
+    // Récupérer un intervenant spécifique via l'API REST
+    public Intervenant getIntervenantById(int id) {
+        try {
+            URL url = new URL(API_BASE_URL + "/intervenants/" + id);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() == 404) {
+                System.out.println("Intervenant non trouvé pour l'ID " + id);
+                return null;
+            }
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération de l'intervenant : HTTP code " + conn.getResponseCode());
+            }
+
+            InputStream is = conn.getInputStream();
+            Intervenant intervenant = objectMapper.readValue(is, Intervenant.class);
+            conn.disconnect();
+            return intervenant;
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération de l'intervenant via l'API REST : " + e.getMessage());
+            return null;
+        }
+    }
+
 
     // CHarger les requêtes de travaux pour un résident
     private void loadWorkRequests() {
@@ -112,248 +170,310 @@ public class APIDatabase {
             }
         }
     }
-    // Obtenir un résident par ID
-    public Resident getResidentById(int id) {
-        String sql = "SELECT email FROM Residents WHERE id = ?";
-        Resident resident = null;
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String email = rs.getString("email");
-                resident = residentsMap.get(email);
-            }
-        } catch (SQLException e) {
-            System.err.println("Failed to fetch resident by ID: " + e.getMessage());
-        }
-        return resident;
-    }
-
-    // Obtenir un intervenant par ID
-    public Intervenant getIntervenantById(int id) {
-        String sql = "SELECT email FROM Intervenants WHERE id = ?";
-        Intervenant intervenant = null;
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-            String email = rs.getString("email");
-            intervenant = intervenantsMap.get(email);
-            }
-        } catch (SQLException e) {
-            System.err.println("Failed to fetch intervenant by ID: " + e.getMessage());
-        }
-        return intervenant;
-    }
 
 
     // Ajouter un résident
     public void addResident(Resident resident) {
-        String sql = "INSERT INTO Residents (full_name, phone_number, address, birth_date, postal_code, borough_id) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, resident.getFullName());
-            stmt.setString(2, resident.getAddress());
-            stmt.setDate(3, Date.valueOf(resident.getBirthDay()));
-            stmt.setString(4, resident.getPostalCode());
-            stmt.executeUpdate();
-            System.out.println("Resident added: " + resident.getFullName());
-        } catch (SQLException e) {
-            System.err.println("Failed to add resident: " + e.getMessage());
+        try {
+            URL url = new URL(API_BASE_URL + "/residents");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            // Convertir l'objet Resident en JSON
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonResident = mapper.writeValueAsString(resident);
+
+            // Envoyer le JSON dans le corps de la requête
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonResident.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            if (conn.getResponseCode() != 201) { // 201 Created
+                throw new RuntimeException("Échec de l'ajout du résident : HTTP code " + conn.getResponseCode());
+            }
+
+            System.out.println("Resident ajouté avec succès : " + resident.getFullName());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'ajout du résident via l'API REST : " + e.getMessage());
         }
     }
 
-    // Mettre à jour un résident
     public void updateResident(Resident resident) {
-        String sql = "UPDATE Residents SET full_name = ?, phone_number = ?, address = ?, birth_date = ?, postal_code = ? WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, resident.getFullName());
-            stmt.setString(2, resident.getAddress());
-            stmt.setDate(3, Date.valueOf(resident.getBirthDay()));
-            stmt.setString(4, resident.getPostalCode());
-            stmt.setInt(5, resident.getId());
-            stmt.executeUpdate();
-            System.out.println("Resident updated: " + resident.getFullName());
-        } catch (SQLException e) {
-            System.err.println("Failed to update resident: " + e.getMessage());
+        try {
+            URL url = new URL(API_BASE_URL + "/residents/" + resident.getId());
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("PUT");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+    
+            // Convertir l'objet Resident en JSON
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonResident = mapper.writeValueAsString(resident);
+    
+            // Envoyer le JSON dans le corps de la requête
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonResident.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+    
+            if (conn.getResponseCode() != 200) { // 200 OK
+                throw new RuntimeException("Échec de la mise à jour du résident : HTTP code " + conn.getResponseCode());
+            }
+    
+            System.out.println("Resident mis à jour avec succès : " + resident.getFullName());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la mise à jour du résident via l'API REST : " + e.getMessage());
         }
     }
 
     // Ajouter un intervenant
     public void addIntervenant(Intervenant intervenant) {
-        String sql = "INSERT INTO Intervenants (full_name, email, id, organisation_name, password_hash, submitter_category) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, intervenant.getFullName());
-            stmt.setString(2, intervenant.getEmail());
-            stmt.setString(3, intervenant.getId());
-            stmt.setString(4, intervenant.getOrganizationName());
-            stmt.setString(5, intervenant.getPassword());
-            stmt.setString(6, intervenant.getType());
-            stmt.executeUpdate();
-            System.out.println("Intervenant added: " + intervenant.getFullName());
-        } catch (SQLException e) {
-            System.err.println("Failed to add intervenant: " + e.getMessage());
+        try {
+            URL url = new URL(API_BASE_URL + "/intervenants");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+    
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonIntervenant = mapper.writeValueAsString(intervenant);
+    
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonIntervenant.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+    
+            if (conn.getResponseCode() != 201) {
+                throw new RuntimeException("Échec de l'ajout de l'intervenant : HTTP code " + conn.getResponseCode());
+            }
+    
+            System.out.println("Intervenant ajouté avec succès : " + intervenant.getFullName());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'ajout de l'intervenant via l'API REST : " + e.getMessage());
         }
     }
 
     // Mettre à jour un intervenant
     public void updateIntervenant(Intervenant intervenant) {
-        String sql = "UPDATE Intervenants SET full_name = ?, email = ?, organisation_name = ?, password_hash = ?, submitter_category = ? WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, intervenant.getFullName());
-            stmt.setString(2, intervenant.getEmail());
-            stmt.setString(3, intervenant.getOrganizationName());
-            stmt.setString(4, intervenant.getPassword());
-            stmt.setString(5, intervenant.getType());
-            stmt.setString(6, intervenant.getId());
-            stmt.executeUpdate();
-            System.out.println("Intervenant updated: " + intervenant.getFullName());
-        } catch (SQLException e) {
-            System.err.println("Failed to update intervenant: " + e.getMessage());
+        try {
+            URL url = new URL(API_BASE_URL + "/intervenants/" + intervenant.getId());
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("PUT");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+    
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonIntervenant = mapper.writeValueAsString(intervenant);
+    
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonIntervenant.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+    
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la mise à jour de l'intervenant : HTTP code " + conn.getResponseCode());
+            }
+    
+            System.out.println("Intervenant mis à jour avec succès : " + intervenant.getFullName());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la mise à jour de l'intervenant via l'API REST : " + e.getMessage());
         }
     }
 
     // Ajouter un projet de travaux
-    public void addWorkProject(WorkProject project, int intervenantId) {
-        String sql = "INSERT INTO WorkProjects (id, start_date, end_date, status, created_by, borough_id, reasonCategory) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        int boroughId = getBoroughIdFromName(project.getBoroughId());
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, project.getId());
-            stmt.setDate(2, Date.valueOf(project.getStartDate()));
-            stmt.setDate(3, Date.valueOf(project.getEndDate()));
-            stmt.setString(4, project.getCurrentStatus());
-            stmt.setInt(5, intervenantId);
-            stmt.setInt(6, boroughId);
-            stmt.setString(7, project.getReasonCategory());
-            stmt.executeUpdate();
-            System.out.println("Work project added: " + project.getId());
-        } catch (SQLException e) {
-            System.err.println("Failed to add work project: " + e.getMessage());
+    public void addWorkProject(WorkProject project) {
+        try {
+            URL url = new URL(API_BASE_URL + "/work-projects");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+    
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonProject = mapper.writeValueAsString(project);
+    
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonProject.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+    
+            if (conn.getResponseCode() != 201) {
+                throw new RuntimeException("Échec de l'ajout du projet de travaux : HTTP code " + conn.getResponseCode());
+            }
+    
+            System.out.println("Projet de travaux ajouté avec succès : " + project.getId());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'ajout du projet de travaux via l'API REST : " + e.getMessage());
         }
     }
 
     // Mettre à jour un projet de travaux
     public void updateWorkProjectStatus(String projectId, String newStatus) {
-        String sql = "UPDATE WorkProjects SET status = ? WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, newStatus);
-            stmt.setString(2, projectId);
-            stmt.executeUpdate();
-            System.out.println("Work project status updated: " + projectId);
-        } catch (SQLException e) {
-            System.err.println("Failed to update work project status: " + e.getMessage());
+        try {
+            URL url = new URL(API_BASE_URL + "/work-projects/" + projectId + "/status");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("PUT");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+    
+            String jsonStatus = "{\"status\": \"" + newStatus + "\"}";
+    
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonStatus.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+    
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la mise à jour du statut du projet : HTTP code " + conn.getResponseCode());
+            }
+    
+            System.out.println("Statut du projet mis à jour : " + projectId);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la mise à jour du statut du projet via l'API REST : " + e.getMessage());
         }
     }
 
     // Récupérer les requêtes de travaux pour un résident
     public List<WorkRequest> getWorkRequestsForResident(int residentId) {
         List<WorkRequest> requests = new ArrayList<>();
-        String sql = "SELECT * FROM WorkRequests WHERE resident_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, residentId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Resident resident = getResidentById(residentId);
-                String borough = resident.getNeighborhood();
-                WorkRequest request = new WorkRequest(
-                    rs.getString("title"),
-                    rs.getString("description"),
-                    rs.getString("work_type"),
-                    rs.getDate("request_date").toLocalDate(),
-                    borough,
-                    resident
-                );
-                requests.add(request);
+        try {
+            URL url = new URL(API_BASE_URL + "/residents/" + residentId + "/work-requests");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+    
+            if (conn.getResponseCode() != 200) { // 200 OK
+                throw new RuntimeException("Échec de la récupération des requêtes de travaux : HTTP code " + conn.getResponseCode());
             }
-        } catch (SQLException e) {
-            System.err.println("Failed to fetch work requests: " + e.getMessage());
+    
+            InputStream is = conn.getInputStream();
+            ObjectMapper mapper = new ObjectMapper();
+            requests = mapper.readValue(is, new TypeReference<List<WorkRequest>>() {});
+
+            for (WorkRequest request : requests){
+                List<Intervenant> candidates = getCandidatesForWorkRequest(request.getId());
+                for (Intervenant candidate : candidates){
+                    request.addCandidate(candidate);
+                }
+            }
+    
+            System.out.println("Requêtes de travaux récupérées avec succès pour le résident ID : " + residentId);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des requêtes de travaux via l'API REST : " + e.getMessage());
         }
         return requests;
     }
 
+    private List<Intervenant> getCandidatesForWorkRequest(int requestId) {
+        List<Intervenant> candidates = new ArrayList<>();
+        try {
+            URL url = new URL(API_BASE_URL + "/work-requests/" + requestId + "/candidates");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération des candidats : HTTP code " + conn.getResponseCode());
+            }
+
+            InputStream is = conn.getInputStream();
+            candidates = objectMapper.readValue(is, new TypeReference<List<Intervenant>>() {});
+
+            conn.disconnect();
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des candidats : " + e.getMessage());
+        }
+        return candidates;
+    }
+
+
     // Ajouter une requête de travail
-    public void addWorkRequest(WorkRequest request, int residentId) {
-        String sql = "INSERT INTO WorkRequests (title, description, work_type, resident_id, project_id, request_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, request.getTitle());
-            stmt.setString(2, request.getDescription());
-            stmt.setString(3, request.getWorkType());
-            stmt.setInt(4, residentId);
-            stmt.setInt(5, new Random().nextInt(100));
-            stmt.setDate(6, Date.valueOf(request.getStartDate()));
-            stmt.setString(7, request.getStatus());
-            stmt.executeUpdate();
-            System.out.println("Work request added: " + request.getTitle());
-        } catch (SQLException e) {
-            System.err.println("Failed to add work request: " + e.getMessage());
+    public void addWorkRequest(WorkRequest request) {
+        try {
+            URL url = new URL(API_BASE_URL + "/work-requests");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+    
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonRequest = mapper.writeValueAsString(request);
+    
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonRequest.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+    
+            if (conn.getResponseCode() != 201) {
+                throw new RuntimeException("Échec de l'ajout de la requête de travail : HTTP code " + conn.getResponseCode());
+            }
+    
+            System.out.println("Requête de travail ajoutée : " + request.getTitle());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'ajout de la requête de travail via l'API REST : " + e.getMessage());
         }
     }
 
     // Récupérer les notifications pour un résident
     public List<Notification> getNotificationsForResident(int residentId) {
         List<Notification> notifications = new ArrayList<>();
-        String sql = "SELECT * FROM Notifications WHERE resident_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, residentId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Resident resident = getResidentById(rs.getInt("resident_id"));
-                Notification notification = new Notification(
-                    resident,
-                    rs.getString("message"),
-                    rs.getBoolean("is_read"),
-                    rs.getTimestamp("sent_at").toLocalDateTime()
-                );
-                notifications.add(notification);
+        try {
+            URL url = new URL(API_BASE_URL + "/residents/" + residentId + "/notifications");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+    
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération des notifications : HTTP code " + conn.getResponseCode());
             }
-        } catch (SQLException e) {
-            System.err.println("Failed to fetch notifications: " + e.getMessage());
+    
+            InputStream is = conn.getInputStream();
+            notifications = objectMapper.readValue(is, new TypeReference<List<Notification>>() {});
+            conn.disconnect();
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des notifications via l'API REST : " + e.getMessage());
         }
         return notifications;
     }
 
     // Mettre à jour le statut d'une notification
     public void markNotificationAsRead(int notificationId) {
-        String sql = "UPDATE Notifications SET is_read = true WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, notificationId);
-            stmt.executeUpdate();
-            System.out.println("Notification marked as read: " + notificationId);
-        } catch (SQLException e) {
-            System.err.println("Failed to update notification: " + e.getMessage());
+        try {
+            URL url = new URL(API_BASE_URL + "/notifications/" + notificationId + "/read");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("PUT");
+    
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la mise à jour de la notification : HTTP code " + conn.getResponseCode());
+            }
+    
+            System.out.println("Notification marquée comme lue : " + notificationId);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la mise à jour de la notification via l'API REST : " + e.getMessage());
         }
     }
 
     // Lire les projets assignés à un intervenant
     public List<WorkProject> getWorkProjectsForIntervenant(int intervenantId) {
         List<WorkProject> projects = new ArrayList<>();
-        
-        // Récupérer tous les boroughs et FSA pour effectuer les correspondances
-        Intervenant intervenant = getIntervenantById(intervenantId);
-        String sql = "SELECT wp.* " +
-                    "FROM WorkProjects wp " +
-                    "JOIN WorkRequestCandidates wrc ON wp.id = wrc.work_request_id " +
-                    "WHERE wrc.intervenant_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, intervenantId);
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()) {
-                // Identifier le borough et la FSA pour chaque projet
-                int boroughId = rs.getInt("borough_id");
-                String boroughName = boroughMap.getOrDefault(boroughId, "Inconnu");
-                
-                WorkProject project = new WorkProject(
-                    rs.getString("id"),
-                    boroughName,
-                    rs.getString("status"),
-                    rs.getString("reasonCategory"),
-                    rs.getString("created_by"),
-                    intervenant.getFullName()
-                );
-                projects.add(project);
+        try {
+            URL url = new URL(API_BASE_URL + "/intervenants/" + intervenantId + "/work-projects");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+    
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération des projets : HTTP code " + conn.getResponseCode());
             }
-        } catch (SQLException e) {
-            System.err.println("Failed to fetch work projects: " + e.getMessage());
+    
+            InputStream is = conn.getInputStream();
+            projects = objectMapper.readValue(is, new TypeReference<List<WorkProject>>() {});
+            conn.disconnect();
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des projets via l'API REST : " + e.getMessage());
         }
         return projects;
     }
@@ -361,14 +481,29 @@ public class APIDatabase {
     // Méthode pour récupérer tous les boroughs
     private Map<Integer, String> getAllBoroughs() {
         Map<Integer, String> boroughMap = new HashMap<>();
-        String sql = "SELECT id, name FROM Boroughs";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                boroughMap.put(rs.getInt("id"), rs.getString("name"));
+        try {
+            URL url = new URL(API_BASE_URL + "/boroughs");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+    
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération des boroughs : HTTP code " + conn.getResponseCode());
             }
-        } catch (SQLException e) {
-            System.err.println("Failed to fetch boroughs: " + e.getMessage());
+    
+            InputStream is = conn.getInputStream();
+            ObjectMapper mapper = new ObjectMapper();
+            List<Map<String, Object>> boroughs = mapper.readValue(is, new TypeReference<List<Map<String, Object>>>() {});
+    
+            for (Map<String, Object> borough : boroughs) {
+                Integer id = (Integer) borough.get("id");
+                String name = (String) borough.get("name");
+                boroughMap.put(id, name);
+            }
+    
+            System.out.println("Boroughs loaded successfully.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des boroughs via l'API REST : " + e.getMessage());
         }
         return boroughMap;
     }
@@ -376,14 +511,29 @@ public class APIDatabase {
     // Méthode pour récupérer la correspondance FSA -> Borough
     private Map<String, Integer> getFSAtoBoroughMapping() {
         Map<String, Integer> fsaToBoroughMap = new HashMap<>();
-        String sql = "SELECT fsa, borough_id FROM FSAs";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                fsaToBoroughMap.put(rs.getString("fsa"), rs.getInt("borough_id"));
+        try {
+            URL url = new URL(API_BASE_URL + "/fsa-boroughs");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+    
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Échec de la récupération des mappings FSA -> Borough : HTTP code " + conn.getResponseCode());
             }
-        } catch (SQLException e) {
-            System.err.println("Failed to fetch FSA mappings: " + e.getMessage());
+    
+            InputStream is = conn.getInputStream();
+            ObjectMapper mapper = new ObjectMapper();
+            List<Map<String, Object>> mappings = mapper.readValue(is, new TypeReference<List<Map<String, Object>>>() {});
+    
+            for (Map<String, Object> mapping : mappings) {
+                String fsa = (String) mapping.get("fsa");
+                Integer boroughId = (Integer) mapping.get("borough_id");
+                fsaToBoroughMap.put(fsa, boroughId);
+            }
+    
+            System.out.println("FSA to Borough mappings loaded successfully.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des mappings FSA -> Borough via l'API REST : " + e.getMessage());
         }
         return fsaToBoroughMap;
     }
@@ -405,15 +555,4 @@ public class APIDatabase {
         return intervenantsMap;
     }
 
-    // Fermer la connexion
-    public void close() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                System.out.println("Database connection closed.");
-            }
-        } catch (SQLException e) {
-            System.err.println("Failed to close database connection: " + e.getMessage());
-        }
-    }
 }

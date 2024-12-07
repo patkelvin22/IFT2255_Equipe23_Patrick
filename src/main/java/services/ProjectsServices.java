@@ -100,7 +100,7 @@ public class ProjectsServices {
             }
     
             WorkRequest newRequest = new WorkRequest(title, description, type, startDate, resident.getNeighborhood(), resident);
-            manageUsers.addWorkRequest(resident, newRequest);
+            manageUsers.addWorkRequest(newRequest);
     
             JOptionPane.showMessageDialog(frame, "Votre requête a été soumise avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
             frame.dispose();
@@ -447,7 +447,7 @@ public class ProjectsServices {
             newWork.setEndDate(endDate);
     
             roadWorks.add(newWork);
-            manageUsers.addWorkProject(intervenant, newWork);
+            manageUsers.addWorkProject(newWork);
     
             JOptionPane.showMessageDialog(newProjectFrame, "Le projet a été soumis avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
             newProjectFrame.dispose(); // Fermer la fenêtre après soumission

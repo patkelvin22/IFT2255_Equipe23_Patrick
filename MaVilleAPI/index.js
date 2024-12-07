@@ -3,11 +3,25 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mysql = require('mysql2');
+const morgan = require('morgan'); // Pour journaliser les requêtes HTTP
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(morgan('dev')); // Journalisation des requêtes
 
+// Vérification des variables d'environnement
+const requiredEnv = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE', 'MYSQL_PORT'];
+requiredEnv.forEach((envVar) => {
+    if (!process.env[envVar]) {
+        console.error(`Erreur : La variable d'environnement ${envVar} n'est pas définie.`);
+        process.exit(1);
+    }
+});
+
+// Configuration de la base de données
 const db = mysql.createConnection({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
@@ -17,7 +31,7 @@ const db = mysql.createConnection({
     connectTimeout: 10000, // Timeout de connexion pour éviter les erreurs
 });
 
-// Connecter à la base de données
+// Connexion à la base de données
 db.connect((err) => {
     if (err) {
         console.error('Erreur de connexion à la base de données :', err);
@@ -37,10 +51,9 @@ app.get('/residents', (req, res) => {
     db.query(query, (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des résidents :', err);
-            res.status(500).send('Erreur interne du serveur');
-        } else {
-            res.json(results);
+            return res.status(500).json({ error: 'Erreur interne du serveur' });
         }
+        res.json(results);
     });
 });
 
@@ -50,10 +63,9 @@ app.get('/intervenants', (req, res) => {
     db.query(query, (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des intervenants :', err);
-            res.status(500).send('Erreur interne du serveur');
-        } else {
-            res.json(results);
+            return res.status(500).json({ error: 'Erreur interne du serveur' });
         }
+        res.json(results);
     });
 });
 
@@ -63,12 +75,12 @@ app.get('/residents/:id', (req, res) => {
     db.query(query, [req.params.id], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération du résident :', err);
-            res.status(500).send('Erreur interne du serveur');
-        } else if (results.length === 0) {
-            res.status(404).send('Résident non trouvé');
-        } else {
-            res.json(results[0]);
+            return res.status(500).json({ error: 'Erreur interne du serveur' });
         }
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Résident non trouvé' });
+        }
+        res.json(results[0]);
     });
 });
 
@@ -78,13 +90,24 @@ app.get('/intervenants/:id', (req, res) => {
     db.query(query, [req.params.id], (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération de l\'intervenant :', err);
-            res.status(500).send('Erreur interne du serveur');
-        } else if (results.length === 0) {
-            res.status(404).send('Intervenant non trouvé');
-        } else {
-            res.json(results[0]);
+            return res.status(500).json({ error: 'Erreur interne du serveur' });
         }
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Intervenant non trouvé' });
+        }
+        res.json(results[0]);
     });
+});
+
+// Middleware pour gérer les routes non trouvées
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route non trouvée' });
+});
+
+// Middleware pour gérer les erreurs internes
+app.use((err, req, res, next) => {
+    console.error('Erreur non gérée :', err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
 });
 
 // Lancer le serveur

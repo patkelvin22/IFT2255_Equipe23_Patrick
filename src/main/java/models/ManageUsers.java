@@ -12,14 +12,14 @@ public class ManageUsers {
     private Map<String, Resident> residents; // Utilisation d'Integer comme clé pour correspondre aux IDs
     private Map<String, Intervenant> intervenants; // Utilisation d'Integer comme clé pour correspondre aux IDs
 
-    public ManageUsers(String dbUrl, String dbUser, String dbPassword) {
-        apiDatabase = new APIDatabase(dbUrl, dbUser, dbPassword); // Initialisation avec les paramètres de la base de données
+    public ManageUsers(String apiBaseURL) {
+        apiDatabase = new APIDatabase(apiBaseURL); // Initialisation avec les paramètres de la base de données
         loadUsers();
     }
 
-    public static ManageUsers getInstance(String dbUrl, String dbUser, String dbPassword) {
+    public static ManageUsers getInstance(String apiBaseURL) {
         if (instance == null) {
-            instance = new ManageUsers(dbUrl, dbUser, dbPassword);
+            instance = new ManageUsers(apiBaseURL);
         }
         return instance;
     }
@@ -76,13 +76,13 @@ public class ManageUsers {
     }
 
     // Ajouter une requête de travail pour un résident
-    public void addWorkRequest(Resident resident, WorkRequest request) {
-        apiDatabase.addWorkRequest(request, resident.getId()); // Associer avec l'ID du résident
+    public void addWorkRequest(WorkRequest request) {
+        apiDatabase.addWorkRequest(request); // Associer avec l'ID du résident
     }
 
     // Ajouter un projet de travaux pour un intervenant
-    public void addWorkProject(Intervenant intervenant, WorkProject project) {
-        apiDatabase.addWorkProject(project, intervenant.getIdApi()); // Associer avec l'ID de l'intervenant
+    public void addWorkProject(WorkProject project) {
+        apiDatabase.addWorkProject(project); // Associer avec l'ID de l'intervenant
     }
 
     // Récupérer les notifications pour un résident
