@@ -142,7 +142,9 @@ CREATE TABLE `Residents` (
   `postal_code` varchar(10) NOT NULL,
   `borough_id` int NOT NULL,
   `password_hash` varchar(45) NOT NULL,
+  `email` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `email_UNIQUE` (`email`),
   KEY `fk_borough` (`borough_id`),
   CONSTRAINT `fk_borough` FOREIGN KEY (`borough_id`) REFERENCES `Boroughs` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -154,7 +156,7 @@ CREATE TABLE `Residents` (
 
 LOCK TABLES `Residents` WRITE;
 /*!40000 ALTER TABLE `Residents` DISABLE KEYS */;
-INSERT INTO `Residents` VALUES (1,'Alice Dupont','5141234567','123 Rue des Fleurs','1990-05-15','H2X1Y5',1,''),(2,'Jean Tremblay','5149876543','456 Boulevard Saint-Laurent','1985-11-25','H2X3Z7',1,''),(3,'Marie Curie','4381230987','789 Avenue des Pins','1992-03-10','H3A1B2',2,''),(4,'Paul Rivière','5147654321','12 Rue Sherbrooke','1988-07-20','H3C2J5',3,''),(5,'Sophie Trudeau','4380987654','34 Boulevard René-Lévesque','1995-09-05','H3B1L6',3,'');
+INSERT INTO `Residents` VALUES (1,'Alice Dupont','5141234567','123 Rue des Fleurs','1990-05-15','H2X1Y5',1,'password1','alice.dupont@example.com'),(2,'Jean Tremblay','5149876543','456 Boulevard Saint-Laurent','1985-11-25','H2X3Z7',1,'password2','jean.tremblay@example.com'),(3,'Marie Curie','4381230987','789 Avenue des Pins','1992-03-10','H3A1B2',2,'password3','marie.curie@example.com'),(4,'Paul Rivière','5147654321','12 Rue Sherbrooke','1988-07-20','H3C2J5',3,'password4','paul.riviere@example.com'),(5,'Sophie Trudeau','4380987654','34 Boulevard René-Lévesque','1995-09-05','H3B1L6',3,'password5','sophie.trudeau@example.com');
 /*!40000 ALTER TABLE `Residents` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -264,4 +266,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-12-06  2:05:46
+-- Dump completed on 2024-12-06 19:09:39
